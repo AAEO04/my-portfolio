@@ -1,0 +1,53 @@
+name: Sync Charon Knowledge Base
+
+on:
+  # Run weekly on Sundays at midnight
+  schedule:
+    - cron: '0 0 * * 0'
+  
+  # Run when code is pushed to main
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/sync-knowledge.yml'
+  
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  sync-knowledge:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+      
+      - name: Sync all sources to Charon
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          GITHUB_USERNAME: ${{ secrets.GH_USERNAME }}
+          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+          HASHNODE_USERNAME: ${{ secrets.HASHNODE_USERNAME }}
+        run: |
+          cd backend
+          python maintain.py sync all
+      
+      - name: Report status
+        if: always()
+        run: |
+          echo "Sync completed at $(date)"
+          echo "Exit code: $?"
