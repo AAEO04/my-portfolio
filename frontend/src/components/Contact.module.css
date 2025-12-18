@@ -1,0 +1,257 @@
+.contact {
+    padding: var(--space-24) 0;
+    background: linear-gradient(180deg, var(--color-background-elevated) 0%, var(--color-background) 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 var(--space-6);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--space-12);
+    align-items: center;
+}
+
+.content {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.contact.visible .content {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.sectionTag {
+    display: inline-block;
+    font-size: var(--text-sm);
+    color: var(--color-primary);
+    margin-bottom: var(--space-4);
+    letter-spacing: 0.1em;
+}
+
+.title {
+    font-size: var(--text-4xl);
+    margin-bottom: var(--space-6);
+    color: var(--color-text-primary);
+    line-height: 1.2;
+}
+
+.highlight {
+    color: var(--color-primary);
+}
+
+.description {
+    font-size: var(--text-base);
+    color: var(--color-text-secondary);
+    line-height: 1.8;
+    margin-bottom: var(--space-8);
+    max-width: 600px;
+}
+
+/* Contact Methods */
+.methods {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin-bottom: var(--space-8);
+}
+
+.method {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    background: var(--color-background-card);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-base);
+}
+
+.method:hover {
+    border-color: var(--color-primary);
+}
+
+.methodIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: var(--color-background);
+    border-radius: var(--radius-md);
+    color: var(--color-primary);
+}
+
+.methodInfo {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.methodLabel {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    letter-spacing: 0.1em;
+}
+
+.methodValue {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-text-primary);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    font-family: var(--font-body);
+    transition: color var(--transition-fast);
+}
+
+button.methodValue:hover {
+    color: var(--color-primary);
+}
+
+.methodValue.available {
+    color: var(--color-success);
+}
+
+.statusDot {
+    width: 8px;
+    height: 8px;
+    background: var(--color-success);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* CTA Buttons */
+.actions {
+    display: flex;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+}
+
+.btnPrimary,
+.btnOutline {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-8);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-base);
+}
+
+.btnPrimary {
+    background: var(--color-primary);
+    color: var(--color-text-primary);
+    border: 2px solid var(--color-primary);
+}
+
+.btnPrimary:hover {
+    background: transparent;
+    box-shadow: var(--shadow-glow-blue);
+}
+
+.btnOutline {
+    background: transparent;
+    color: var(--color-text-primary);
+    border: 2px solid var(--color-border);
+}
+
+.btnOutline:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+/* Decoration */
+.decoration {
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 1s cubic-bezier(0.4, 0, 0.2, 1) 0.3s;
+}
+
+.contact.visible .decoration {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.circuitLines {
+    width: 200px;
+    height: 200px;
+    color: var(--color-border);
+}
+
+.circuitLines svg {
+    width: 100%;
+    height: 100%;
+}
+
+.line1,
+.line2,
+.line3 {
+    stroke-dasharray: 200;
+    stroke-dashoffset: 200;
+    animation: drawLine 2s ease forwards;
+}
+
+.line2 {
+    animation-delay: 0.3s;
+}
+
+.line3 {
+    animation-delay: 0.6s;
+}
+
+@keyframes drawLine {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .container {
+        grid-template-columns: 1fr;
+    }
+
+    .decoration {
+        display: none;
+    }
+
+    .title {
+        font-size: var(--text-3xl);
+    }
+
+    .actions {
+        flex-direction: column;
+    }
+
+    .btnPrimary,
+    .btnOutline {
+        justify-content: center;
+        width: 100%;
+    }
+}

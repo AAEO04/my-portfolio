@@ -1,0 +1,510 @@
+.hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: var(--space-8);
+}
+
+/* Animated Grid Background */
+.gridBackground {
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(59, 130, 246, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59, 130, 246, 0.02) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: gridMove 20s linear infinite;
+}
+
+@keyframes gridMove {
+    0% {
+        transform: translate(0, 0);
+    }
+
+    100% {
+        transform: translate(50px, 50px);
+    }
+}
+
+/* Canvas for P&ID Lines */
+.canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    opacity: 0.2;
+    /* Reduced from 0.5 */
+}
+
+/* Skills Overlay */
+.skillsOverlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.skillNode {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    pointer-events: auto;
+    cursor: pointer;
+    z-index: 1;
+}
+
+.symbol {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background: var(--color-background-elevated);
+    /* Keep background for readability */
+    border: 1px solid var(--color-border);
+    /* Reduced from 2px */
+    border-radius: 50%;
+    font-size: var(--text-xl);
+    color: var(--color-text-muted);
+    transition: all var(--transition-base);
+    opacity: 0.7;
+    /* Make them slightly transparent by default */
+}
+
+.skillNode:hover .symbol,
+.skillNode.active .symbol {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    box-shadow: 0 0 20px var(--color-primary-glow);
+    transform: scale(1.1);
+    opacity: 1;
+}
+
+.tooltip {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-background-elevated);
+    border: 1px solid var(--color-primary);
+    border-radius: var(--radius-md);
+    white-space: nowrap;
+    z-index: 10;
+    animation: fadeInUp 0.2s ease;
+}
+
+.tooltipName {
+    display: block;
+    font-weight: 600;
+    color: var(--color-primary);
+    font-size: var(--text-sm);
+}
+
+.tooltipDesc {
+    display: block;
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+}
+
+/* Main Content Grid */
+.heroGrid {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    grid-template-areas: "text visual";
+    gap: var(--space-8);
+    align-items: center;
+    max-width: 1200px;
+    width: 100%;
+    padding: 0 var(--space-4);
+}
+
+/* Visual Content (Right) */
+.visualContent {
+    grid-area: visual;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Text Content (Left) */
+.textContent {
+    grid-area: text;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+/* Profile Photo */
+.profileContainer {
+    display: flex;
+    justify-content: center;
+    /* Removed margin-bottom */
+}
+
+.profileFrame {
+    position: relative;
+    width: 280px;
+    /* Larger on desktop */
+    height: 280px;
+    padding: 6px;
+}
+
+.profilePhoto {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 4px;
+    filter: grayscale(20%);
+    transition: all var(--transition-base);
+}
+
+.profilePhoto:hover {
+    filter: grayscale(0%);
+    transform: scale(1.02);
+}
+
+.frameBorder {
+    position: absolute;
+    inset: 0;
+    border: 2px solid var(--color-border);
+    border-radius: 4px;
+    pointer-events: none;
+    transition: all var(--transition-base);
+}
+
+.profileFrame:hover .frameBorder {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 30px var(--color-primary-glow);
+}
+
+/* Industrial Corner Brackets */
+.frameCorner {
+    position: absolute;
+    width: 20px;
+    /* Larger corners */
+    height: 20px;
+    border: 3px solid var(--color-primary);
+    pointer-events: none;
+}
+
+.frameCorner[data-corner="tl"] {
+    top: -6px;
+    left: -6px;
+    border-right: none;
+    border-bottom: none;
+}
+
+.frameCorner[data-corner="tr"] {
+    top: -6px;
+    right: -6px;
+    border-left: none;
+    border-bottom: none;
+}
+
+.frameCorner[data-corner="bl"] {
+    bottom: -6px;
+    left: -6px;
+    border-right: none;
+    border-top: none;
+}
+
+.frameCorner[data-corner="br"] {
+    bottom: -6px;
+    right: -6px;
+    border-left: none;
+    border-top: none;
+}
+
+.statusBar {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-4);
+    background: var(--color-background-elevated);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-6);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.statusDot {
+    width: 8px;
+    height: 8px;
+    background: var(--color-success);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.separator {
+    color: var(--color-border);
+}
+
+/* Name Animation */
+.name {
+    position: relative;
+    margin-bottom: var(--space-4);
+    overflow: hidden;
+}
+
+.nameText {
+    display: inline-block;
+    font-size: var(--text-hero);
+    /* Keep large */
+    line-height: 1.1;
+    background: linear-gradient(135deg, var(--color-text-primary) 0%, var(--color-primary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.name.drawn .nameText {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Blueprint Drawing Effect */
+.name::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            var(--color-background) 50%,
+            var(--color-background) 100%);
+    transition: transform 1.5s ease-out;
+}
+
+.name.drawn::before {
+    transform: translateX(100%);
+}
+
+/* Role */
+.roleContainer {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-6);
+}
+
+.role {
+    font-family: var(--font-heading);
+    font-size: var(--text-2xl);
+    color: var(--color-text-secondary);
+    letter-spacing: 0.15em;
+}
+
+.transition {
+    font-size: var(--text-lg);
+    color: var(--color-primary);
+    background: var(--color-primary-glow);
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-sm);
+}
+
+/* Hook Quote */
+.hook {
+    font-size: var(--text-lg);
+    line-height: 1.6;
+    color: var(--color-text-secondary);
+    max-width: 600px;
+    margin: 0 0 var(--space-8) 0;
+    font-style: italic;
+    text-align: left;
+}
+
+.highlight {
+    color: var(--color-primary);
+    font-weight: 600;
+    font-style: normal;
+}
+
+/* Action Buttons */
+.actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+}
+
+.btnPrimary,
+.btnOutline {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-8);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    text-decoration: none;
+}
+
+.btnPrimary {
+    background: var(--color-primary);
+    color: var(--color-text-primary);
+    border: 2px solid var(--color-primary);
+}
+
+.btnPrimary:hover {
+    background: transparent;
+    box-shadow: var(--shadow-glow-blue);
+}
+
+.btnOutline {
+    background: transparent;
+    color: var(--color-text-primary);
+    border: 2px solid var(--color-border);
+}
+
+.btnOutline:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+/* Scroll Indicator */
+.scrollIndicator {
+    position: absolute;
+    bottom: var(--space-8);
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+    letter-spacing: 0.2em;
+    animation: float 3s ease-in-out infinite;
+}
+
+.scrollLine {
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(to bottom, var(--color-primary), transparent);
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateX(-50%) translateY(0);
+    }
+
+    50% {
+        transform: translateX(-50%) translateY(10px);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .hero {
+        padding: var(--space-6) var(--space-4);
+        height: auto;
+        min-height: 100vh;
+        align-items: flex-start;
+        padding-top: 100px;
+        /* Space for navbar */
+    }
+
+    .heroGrid {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "visual"
+            "text";
+        gap: var(--space-6);
+        text-align: center;
+    }
+
+    .textContent {
+        align-items: center;
+        text-align: center;
+    }
+
+    .visualContent {
+        justify-content: center;
+    }
+
+    .profileFrame {
+        width: 180px;
+        height: 180px;
+    }
+
+    .hook {
+        text-align: center;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .roleContainer {
+        justify-content: center;
+    }
+
+    .skillNode {
+        /* Hide complex skill nodes on mobile/tablet to reduce clutter */
+        opacity: 0.3;
+        pointer-events: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .roleContainer {
+        flex-direction: column;
+        gap: var(--space-2);
+    }
+
+    .hook {
+        font-size: var(--text-base);
+    }
+
+    .actions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .btnPrimary,
+    .btnOutline {
+        width: 100%;
+        justify-content: center;
+    }
+}
