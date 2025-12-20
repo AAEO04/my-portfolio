@@ -175,9 +175,7 @@ export default function ChatInterface() {
             await simulateTypingEffect(data.response, assistantId);
         } catch {
             // Fallback response if API is not available
-            const fallbackResponse = `The connection to my knowledge base is currently severed. In production, I would search through Ayomide's work to answer: "${userMessage.content}". 
-
-Ensure the backend is running at ${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}.`;
+            const fallbackResponse = `I'm currently unable to access my knowledge base. This might be temporary. Please try again in a moment, or feel free to contact Ayomide directly via the contact form below.`;
 
             await simulateTypingEffect(fallbackResponse, assistantId);
         } finally {

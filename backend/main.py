@@ -14,6 +14,9 @@ from collections import defaultdict
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 # --- CONFIGURATION ---
 load_dotenv()
@@ -101,10 +104,19 @@ app = FastAPI(
     version="2.0.0"
 )
 
+# Rate limiting
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 # CORS Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL, "http://localhost:3000", "*"],
+    allow_origins=[
+        FRONTEND_URL,
+        "http://localhost:3000",
+        "https://my-portfolio-pi-gold-38.vercel.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -116,6 +128,21 @@ class ChatRequest(BaseModel):
     conversation_history: Optional[list] = []
     session_id: Optional[str] = None  # For conversation memory
     language: Optional[str] = "en"  # Preferred response language
+    
+    # Input validation
+    @property
+    def validated_query(self) -> str:
+        if len(self.query) > 1000:
+            raise ValueError("Query too long (max 1000 characters)")
+        if not self.query.strip():
+            raise ValueError("Query cannot be empty")
+        return self.query.strip()
+    
+    @property
+    def validated_history(self) -> list:
+        if len(self.conversation_history) > 20:
+            return self.conversation_history[-20:]  # Keep last 20 only
+        return self.conversation_history
 
 class ChatResponse(BaseModel):
     response: str
@@ -372,41 +399,42 @@ async def status_page():
     }
 
 @app.post("/chat")
-async def chat(request: ChatRequest):
+@limiter.limit("10/minute")
+async def chat(request: Request, chat_request: ChatRequest):
     """Non-streaming chat endpoint with session memory and language support."""
     try:
         # Track analytics
         analytics_data["chat_messages"] += 1
-        analytics_data["popular_questions"].append(request.query[:100])
+        analytics_data["popular_questions"].append(chat_request.query[:100])
         
         # Check for easter eggs first
-        easter_egg = check_easter_egg(request.query)
+        easter_egg = check_easter_egg(chat_request.query)
         if easter_egg:
             # Save easter egg interaction to session if available
-            if request.session_id:
-                save_to_session(request.session_id, "user", request.query)
-                save_to_session(request.session_id, "assistant", easter_egg)
+            if chat_request.session_id:
+                save_to_session(chat_request.session_id, "user", chat_request.query)
+                save_to_session(chat_request.session_id, "assistant", easter_egg)
             return {
                 "response": easter_egg,
                 "citations": [],
                 "easter_egg": True,
-                "session_id": request.session_id
+                "session_id": chat_request.session_id
             }
         
         # Get session history if available
-        session_history = get_session_history(request.session_id)
+        session_history = get_session_history(chat_request.session_id)
         
         # Combine with provided history (prefer session history)
-        combined_history = session_history if session_history else request.conversation_history
+        combined_history = session_history if session_history else chat_request.conversation_history
         
         # 1. Generate query embedding
-        query_embedding = get_query_embedding(request.query)
+        query_embedding = get_query_embedding(chat_request.query)
         
         # 2. Search knowledge base
         context_docs = search_knowledge_base(query_embedding)
         
         # 3. Build prompt with context and language
-        system_prompt, citations = build_system_prompt(context_docs, request.language or "en")
+        system_prompt, citations = build_system_prompt(context_docs, chat_request.language or "en")
         
         # 4. Generate response with conversation history
         model = genai.GenerativeModel('gemini-flash-latest')
@@ -418,7 +446,7 @@ async def chat(request: ChatRequest):
             content = msg.get("content", "")
             history_text += f"\n{role.upper()}: {content}"
         
-        full_prompt = f"{system_prompt}\n\n## CONVERSATION HISTORY{history_text}\n\nUser Query: {request.query}"
+        full_prompt = f"{system_prompt}\n\n## CONVERSATION HISTORY{history_text}\n\nUser Query: {chat_request.query}"
         
         try:
             response = model.generate_content(full_prompt)
@@ -431,22 +459,22 @@ async def chat(request: ChatRequest):
                 return {
                     "response": response_text,
                     "citations": [],
-                    "session_id": request.session_id,
-                    "language": request.language
+                    "session_id": chat_request.session_id,
+                    "language": chat_request.language
                 }
             else:
                 raise e
         
         # Save to session memory
-        if request.session_id:
-            save_to_session(request.session_id, "user", request.query)
-            save_to_session(request.session_id, "assistant", response_text)
+        if chat_request.session_id:
+            save_to_session(chat_request.session_id, "user", chat_request.query)
+            save_to_session(chat_request.session_id, "assistant", response_text)
         
         return {
             "response": response_text,
             "citations": citations,
-            "session_id": request.session_id,
-            "language": request.language
+            "session_id": chat_request.session_id,
+            "language": chat_request.language
         }
         
     except Exception as e:
@@ -457,7 +485,7 @@ async def chat(request: ChatRequest):
         return {
              "response": "I encountered a critical system error. Please contact Ayomide via email.",
              "citations": [],
-             "session_id": request.session_id
+             "session_id": chat_request.session_id
         }
 
 @app.post("/chat/stream")
@@ -634,7 +662,8 @@ Sent from your portfolio at {datetime.utcnow().isoformat()}
         print(f"Failed to send email: {e}")
 
 @app.post("/contact")
-async def submit_contact(contact: ContactRequest, background_tasks: BackgroundTasks):
+@limiter.limit("5/minute")
+async def submit_contact(request: Request, contact: ContactRequest, background_tasks: BackgroundTasks):
     """Submit a contact form inquiry."""
     try:
         # Store in Supabase (create contacts table if needed)

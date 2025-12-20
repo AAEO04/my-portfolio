@@ -7,3 +7,4 @@ python-multipart>=0.0.6
 pydantic[email]>=2.5.3
 psutil>=5.9.8
 requests>=2.31.0
+slowapi>=0.1.9
